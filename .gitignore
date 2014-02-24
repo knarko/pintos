@@ -9,6 +9,7 @@
 *.a
 
 # Shared objects (inc. Windows DLLs)
+*.d
 *.dll
 *.so
 *.so.*
@@ -21,3 +22,9 @@
 *.i*86
 *.x86_64
 *.hex
+
+#Random swap files and such
+*~
+*.swp
+*.swo
+
