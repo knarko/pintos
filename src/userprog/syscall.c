@@ -87,14 +87,28 @@ syscall_handler (struct intr_frame *f)
       DBG("#Exit status: %i", esp[1]);
       thread_exit();
       break;
-    
+      
+    case SYS_CREATE:
+      break;
+
+    case SYS_OPEN:
+      break;
+
     case SYS_READ:
       f->eax = sys_read(esp[1], (char*)esp[2], esp[3]);
       break;
-      
+
     case SYS_WRITE:
       f->eax = sys_write(esp[1], (char*)esp[2], esp[3]);
       break;
+
+    case SYS_CLOSE:
+      break;
+
+    case SYS_REMOVE:
+      break;
+
+
 
     default:
       {

@@ -42,6 +42,36 @@ const int argc[] = {
   0
 };
 
+static int32_t
+sys_read(const int32_t fd, char* buf, const int32_t len)
+{
+  if (fd == STDIN_FILENO)
+    {
+      char c;
+      int i;
+      for (i = 0; i < len; ++i)
+	{
+	  c = input_getc();
+	  buf[i] = c == '\r'? '\n' : c;
+	  putchar(c);
+	}
+      return i;
+    }
+  return -1;
+}
+
+static int32_t
+sys_write(const int32_t fd, char* buf, const int32_t len)
+{
+  if (fd == STDOUT_FILENO)
+    {
+      putbuf(buf, len);
+      return len;
+    }
+  return -1;
+}
+
+
 static void
 syscall_handler (struct intr_frame *f) 
 {
@@ -54,31 +84,16 @@ syscall_handler (struct intr_frame *f)
       break;
     
     case SYS_EXIT:
-      DBG("#Exit: %i", esp[1]);
+      DBG("#Exit status: %i", esp[1]);
       thread_exit();
       break;
     
     case SYS_READ:
-      f->eax = -1;
-      if (esp[1] == STDIN_FILENO)
-	{
-	  char c;
-	  int i;
-	  for (i = 0; i < esp[3]; ++i)
-	    {
-	      c = input_getch();
-	      ((char*)esp[2])[i] = c == '\r'? '\n' : c;
-	    }
-	  f->eax = i;
-	}
+      f->eax = sys_read(esp[1], (char*)esp[2], esp[3]);
       break;
       
     case SYS_WRITE:
-      f->eax = -1;
-      if (esp[1] == STDOUT_FILENO)
-	{
-	  
-	}
+      f->eax = sys_write(esp[1], (char*)esp[2], esp[3]);
       break;
 
     default:
