@@ -1,15 +1,17 @@
 /* halt.c
 
-   Simple program to test whether running a user program works.
- 	
-   Just invokes a system call that shuts down the OS. */
+	Simple program to test whether running a user program works.
+
+	Just invokes a system call that shuts down the OS. */
 
 #include <syscall.h>
-#include <stdio.h>
-#include <string.h>
-int
+
+	int
 main (void)
 {
-  /* not reached */
-  return 0;
+	exit(13);
+	/*This should not be seen */
+	exit(14);
+	halt ();
+	/* not reached */
 }
