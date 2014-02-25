@@ -40,7 +40,7 @@ value_t flist_remove_file(int fd, struct thread* t)
 }
 
 
-bool always_true(key_t, value_t, int i)
+bool always_true(key_t t, value_t v, int i)
 {
   return true;
 }
