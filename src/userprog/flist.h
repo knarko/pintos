@@ -60,5 +60,5 @@ void map_remove_if(struct map*, bool(*exec)(key_t, value_t, int), int);
 int32_t flist_add_file(struct file*, struct thread*);
 value_t flist_find_file(int fd, struct thread*);
 value_t flist_remove_file(int fd, struct thread*);
-bool flist_remove_process(struct thread*);
+void flist_remove_process(struct thread*);
 #endif

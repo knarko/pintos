@@ -42,6 +42,7 @@ const int argc[] = {
   0
 };
 
+
 static int32_t
 sys_open(char* fname)
 {
@@ -57,7 +58,7 @@ sys_open(char* fname)
 static int32_t
 sys_filesize(int32_t fd)
 {
-  file *f = flist_find_file(fd, thread_current());
+  struct file *f = flist_find_file(fd, thread_current());
   if (f == NULL) 
     return -1;
   return file_length(f);  
@@ -93,14 +94,14 @@ sys_write(const int32_t fd, char* buf, const int32_t len)
 }
 
 static void
-sys_seek(int32_t fd, off_t pos) 
+sys_file_seek(int32_t fd, off_t pos) 
 {
   if (pos < 0)
     {
       return;
     }
 
-  file *f = flist_find_file(fd, thread_current());
+  struct file *f = flist_find_file(fd, thread_current());
   if (f != NULL || pos <= file_length(f))
     {
       file_seek(f, pos);
@@ -108,9 +109,9 @@ sys_seek(int32_t fd, off_t pos)
 }
 
 static off_t
-file_tell(int32_t fd)
+sys_file_tell(int32_t fd)
 {
-  file *f = flist_find_file(fd, thread_current());
+  struct file *f = flist_find_file(fd, thread_current());
   if (f != NULL)
     file_tell(f);
   return -1;
@@ -172,9 +173,11 @@ syscall_handler (struct intr_frame *f)
       break;
 
     case SYS_SEEK:
+      sys_file_seek(esp[1], esp[2]);
       break;
 
     case SYS_TELL:
+      f->eax = sys_file_tell(esp[1]);
       break;
       
     case SYS_CLOSE:

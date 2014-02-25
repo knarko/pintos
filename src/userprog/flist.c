@@ -53,7 +53,7 @@ void flist_remove_process(struct thread* t)
 {
   if (t == NULL) return;
 
-  map_remove_if(&(t->file_list), always_true, 0);
+  map_remove_if(&(t->open_files), always_true, 0);
 }
 
 
