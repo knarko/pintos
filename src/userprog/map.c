@@ -11,7 +11,7 @@ void map_init(struct map* m)
     return;
 }
 
-int map_insert(struct map* m, char* c)
+int map_insert(struct map* m, value_t c)
 {
     struct association *my_ass = malloc(sizeof(struct association));
     my_ass->value = c;
@@ -20,7 +20,7 @@ int map_insert(struct map* m, char* c)
     return my_ass->key;
 }
 
-char* map_find(struct map* m, int i)
+char* map_find(struct map* m, key_t i)
 {
     struct list_elem *e;
     for(e = list_rbegin(&(m->content)); e != list_rend(&(m->content)); e = list_prev(e)){
@@ -34,7 +34,7 @@ char* map_find(struct map* m, int i)
     return NULL;
 }
 
-char* map_remove(struct map* m, int i)
+char* map_remove(struct map* m, key_t i)
 {
     struct list_elem *e;
     for(e = list_rbegin(&(m->content)); e != list_rend(&(m->content)); e = list_prev(e)){
