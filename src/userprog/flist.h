@@ -1,5 +1,10 @@
-#ifndef _FLIST_H_
-#define _FLIST_H_
+#ifndef USERPROG_FLIST_H
+#define USERPROG_FLIST_H
+
+#include "filesys/file.h"
+#include <list.h>
+//#include "threads/thread.h"
+struct thread;
 
 /* Place functions to handle a process open files here (file list).
 
@@ -30,10 +35,30 @@
    track of, to guarantee ALL open files are eventyally CLOSED
    (probably when removed from the list(s)).
  */
+typedef struct file* value_t;
+typedef int key_t;
 
 
-int32_t flist_add_file(struct file*,int pid);
-struct file* flist_find_file(int fd);
-bool flist_remove_file(int fd);
-bool flist_remove_process(int pid);
+struct association{
+	key_t key;
+	value_t value;
+	struct list_elem elem;
+};
+
+struct map{
+	struct list content;
+	int next_key;
+};
+
+void map_init(struct map*);
+int map_insert(struct map*, value_t);
+value_t map_find(struct map*, key_t);
+value_t map_remove(struct map*, key_t);
+void map_for_each(struct map*, void(*exec)(key_t, value_t, int), int);
+void map_remove_if(struct map*, bool(*exec)(key_t, value_t, int), int);
+
+int32_t flist_add_file(struct file*, struct thread*);
+value_t flist_find_file(int fd, struct thread*);
+value_t flist_remove_file(int fd, struct thread*);
+bool flist_remove_process(struct thread*);
 #endif

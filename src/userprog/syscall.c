@@ -48,10 +48,16 @@ sys_open(char* fname)
 	struct file* ofile = filesys_open(fname);
 	if(ofile != NULL)
 	{
-		return flist_add_file(ofile, pid);
+		return flist_add_file(ofile, thread_current());
 	} else {
 		return -1;
 	}
+}
+
+static void
+sys_close(int32_t fd)
+{
+    filesys_close(flist_remove_file(fd, thread_current()));
 }
 
 static int32_t
@@ -117,7 +123,7 @@ syscall_handler (struct intr_frame *f)
       break;
 
     case SYS_CLOSE:
-		filesys_close(esp[1]);
+		sys_close(esp[1]);
       break;
 
     case SYS_REMOVE:

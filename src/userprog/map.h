@@ -1,12 +1,17 @@
 #ifndef _MAP_H
 #define _MAP_H
 
-#include "list.h"
+#include "lib/kernel/list.h"
 
 #define PANIC() exit(1)
 
-typedef struct map value_t;
-typedef int key_t;
+typedef struct filepair value_t;
+typedef int32_t key_t;
+
+struct filepair{
+	int32_t fd;
+	struct file* file;
+};
 
 struct association{
 	key_t key;
