@@ -1,13 +1,12 @@
-#ifndef MAP_H
-#define MAP_H
+#ifndef _MAP_H
+#define _MAP_H
 
 #include "list.h"
 
 #define PANIC() exit(1)
 
-typedef struct file* value_t;
+typedef struct map value_t;
 typedef int key_t;
-//typedef enum bool {true,false} bool;
 
 struct association{
 	key_t key;
@@ -21,9 +20,9 @@ struct map{
 };
 
 void map_init(struct map*);
-int map_insert(struct map*, char*);
-char* map_find(struct map*, int);
-char* map_remove(struct map*, int);
+int map_insert(struct map*, value_t);
+value_t* map_find(struct map*, key_t);
+value_t* map_remove(struct map*, key_t);
 void map_for_each(struct map*, void(*exec)(key_t, value_t, int), int);
 void map_remove_if(struct map*, bool(*exec)(key_t, value_t, int), int);
 

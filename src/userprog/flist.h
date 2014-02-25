@@ -1,8 +1,8 @@
-#ifndef _MAP_H_
-#define _MAP_H_
+#ifndef _FLIST_H_
+#define _FLIST_H_
 
 /* Place functions to handle a process open files here (file list).
-   
+
    flist.h : Your function declarations and documentation.
    flist.c : Your implementation.
 
@@ -21,7 +21,7 @@
      and a process id REMOVE the file from a list. Should return NULL
      if the specified process did not insert the file or already
      removed it.
-   
+
    - A function that given a process id REMOVE ALL files the specified
      process have in the list.
 
@@ -32,4 +32,8 @@
  */
 
 
+int32_t flist_add_file(struct file*,int pid);
+struct file* flist_find_file(int fd);
+bool flist_remove_file(int fd);
+bool flist_remove_process(int pid);
 #endif

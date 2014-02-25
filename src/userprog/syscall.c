@@ -48,7 +48,7 @@ sys_open(char* fname)
 	struct file* ofile = filesys_open(fname);
 	if(ofile != NULL)
 	{
-
+		return flist_add_file(ofile, pid);
 	} else {
 		return -1;
 	}
