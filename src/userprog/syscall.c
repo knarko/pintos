@@ -42,22 +42,26 @@ const int argc[] = {
   0
 };
 
+
 static int32_t
 sys_open(char* fname)
 {
-	struct file* ofile = filesys_open(fname);
-	if(ofile != NULL)
-	{
-		return flist_add_file(ofile, thread_current());
-	} else {
-		return -1;
-	}
+  struct file* ofile = filesys_open(fname);
+  if(ofile != NULL)
+    {
+      return flist_add_file(ofile, thread_current());
+    } else {
+    return -1;
+  }
 }
 
-static void
-sys_close(int32_t fd)
+static int32_t
+sys_filesize(int32_t fd)
 {
-    filesys_close(flist_remove_file(fd, thread_current()));
+  struct file *f = flist_find_file(fd, thread_current());
+  if (f == NULL) 
+    return -1;
+  return file_length(f);  
 }
 
 static int32_t
@@ -89,6 +93,37 @@ sys_write(const int32_t fd, char* buf, const int32_t len)
   return -1;
 }
 
+static void
+sys_file_seek(int32_t fd, off_t pos) 
+{
+  if (pos < 0)
+    {
+      return;
+    }
+
+  struct file *f = flist_find_file(fd, thread_current());
+  if (f != NULL || pos <= file_length(f))
+    {
+      file_seek(f, pos);
+    }
+}
+
+static off_t
+sys_file_tell(int32_t fd)
+{
+  struct file *f = flist_find_file(fd, thread_current());
+  if (f != NULL)
+    file_tell(f);
+  return -1;
+}
+
+static void
+sys_close(int32_t fd)
+{
+  filesys_close(flist_remove_file(fd, thread_current()));
+}
+
+
 
 static void
 syscall_handler (struct intr_frame *f)
@@ -106,12 +141,27 @@ syscall_handler (struct intr_frame *f)
       thread_exit();
       break;
 
+      /*
+	case SYS_EXEC:
+	break;
+
+	case SYS_WAIT:
+	break;
+      */
+
     case SYS_CREATE:
-		f->eax = filesys_create((const char*)esp[1], esp[2]);
+      f->eax = filesys_create((const char*)esp[1], esp[2]);
+      break;
+
+    case SYS_REMOVE:
       break;
 
     case SYS_OPEN:
-		f->eax = sys_open(esp[1]);
+      f->eax = sys_open(esp[1]);
+      break;
+      
+    case SYS_FILESIZE:
+      f->eax = sys_filesize(esp[1]);
       break;
 
     case SYS_READ:
@@ -122,14 +172,17 @@ syscall_handler (struct intr_frame *f)
       f->eax = sys_write(esp[1], (char*)esp[2], esp[3]);
       break;
 
+    case SYS_SEEK:
+      sys_file_seek(esp[1], esp[2]);
+      break;
+
+    case SYS_TELL:
+      f->eax = sys_file_tell(esp[1]);
+      break;
+      
     case SYS_CLOSE:
-		sys_close(esp[1]);
+      sys_close(esp[1]);
       break;
-
-    case SYS_REMOVE:
-      break;
-
-
 
     default:
       {

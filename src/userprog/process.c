@@ -227,6 +227,9 @@ process_cleanup (void)
   uint32_t       *pd  = cur->pagedir;
   int status = -1;
   
+
+  flist_remove_process(cur);
+
   debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
   
   /* Later tests DEPEND on this output to work correct. You will have
