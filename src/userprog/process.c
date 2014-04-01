@@ -26,107 +26,107 @@
 
 struct main_args
 {
-	/* Hint: When try to interpret C-declarations, read from right to
-	 * left! It is often easier to get the correct interpretation,
-	 * altough it does not always work. */
+  /* Hint: When try to interpret C-declarations, read from right to
+   * left! It is often easier to get the correct interpretation,
+   * altough it does not always work. */
 
-	/* Variable "ret" that stores address (*ret) to a function taking no
-	 * parameters (void) and returning nothing. */
-	void (*ret)(void);
+  /* Variable "ret" that stores address (*ret) to a function taking no
+   * parameters (void) and returning nothing. */
+  void (*ret)(void);
 
-	/* Just a normal integer. */
-	int argc;
+  /* Just a normal integer. */
+  int argc;
 
-	/* Variable "argv" that stores address to an address storing char.
-	 * That is: argv is a pointer to char*
-	 */
-	char** argv;
+  /* Variable "argv" that stores address to an address storing char.
+   * That is: argv is a pointer to char*
+   */
+  char** argv;
 };
 /* Replace calls to STACK_DEBUG with calls to printf. All such calls
  * easily removed later by replacing with nothing. */
-#define STACK_DEBUG(...) printf(__VA_ARGS__)
+#define STACK_DEBUG(...) //printf(__VA_ARGS__)
 
 void* setup_main_stack(const char* command_line, void* stack_top)
 {
-	/* Variable "esp" stores an address, and at the memory loaction
-	 * pointed out by that address a "struct main_args" is found.
-	 * That is: "esp" is a pointer to "struct main_args" */
-	struct main_args* esp;
-	int argc;
-	int total_size;
-	int line_size;
-	/* "cmd_line_on_stack" and "ptr_save" are variables that each store
-	 * one address, and at that address (the first) char (of a possible
-	 * sequence) can be found. */
-	char* cmd_line_on_stack;
-	char* ptr_save;
-	//int i = 0;
+  /* Variable "esp" stores an address, and at the memory loaction
+   * pointed out by that address a "struct main_args" is found.
+   * That is: "esp" is a pointer to "struct main_args" */
+  struct main_args* esp;
+  int argc;
+  int total_size;
+  int line_size;
+  /* "cmd_line_on_stack" and "ptr_save" are variables that each store
+   * one address, and at that address (the first) char (of a possible
+   * sequence) can be found. */
+  char* cmd_line_on_stack;
+  char* ptr_save;
+  //int i = 0;
 
-	/* CALCULate the bytes needed to store the command_line */
-	line_size = strlen(command_line) + 1;
-	STACK_DEBUG("# line_size = %d\n", line_size);
+  /* CALCULate the bytes needed to store the command_line */
+  line_size = strlen(command_line) + 1;
+  STACK_DEBUG("# line_size = %d\n", line_size);
 
-	char* new_command_line = malloc(line_size);
-	strlcpy(new_command_line, command_line, line_size);
-	char* curr;
-	char** saveptr;
-	argc = 0;
-	line_size = 0;
-	for(curr = strtok_r(new_command_line, " ", &saveptr); curr != NULL; curr = strtok_r(NULL, " ", &saveptr))
+  char* new_command_line = malloc(line_size);
+  strlcpy(new_command_line, command_line, line_size);
+  char* curr;
+  char** saveptr;
+  argc = 0;
+  line_size = 0;
+  for(curr = strtok_r(new_command_line, " ", &saveptr); curr != NULL; curr = strtok_r(NULL, " ", &saveptr))
+    {
+      ++argc;
+      for(;*curr != '\0';++curr)
 	{
-		++argc;
-		for(;*curr != '\0';++curr)
-		{
-			*(new_command_line+line_size) = *curr;
-			++line_size;
-		}
-		*(new_command_line+line_size) = ' ';
-		++line_size;
-
+	  *(new_command_line+line_size) = *curr;
+	  ++line_size;
 	}
-	*(new_command_line+line_size) = '\0';
-	STACK_DEBUG("# new_command_line = '%s'\n# new_line_size = '%d'\n", new_command_line, line_size);
-	/* round up to make it even divisible by 4 */
-	line_size += 3 - (line_size - 1) % 4;
-	STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
+      *(new_command_line+line_size) = ' ';
+      ++line_size;
 
-	/* calculate how many words the command_line contain */
-	STACK_DEBUG("# argc = %d\n", argc);
+    }
+  *(new_command_line+line_size) = '\0';
+  STACK_DEBUG("# new_command_line = '%s'\n# new_line_size = '%d'\n", new_command_line, line_size);
+  /* round up to make it even divisible by 4 */
+  line_size += 3 - (line_size - 1) % 4;
+  STACK_DEBUG("# line_size (aligned) = %d\n", line_size);
 
-	/* calculate the size needed on our simulated stack */
-	total_size = (4 + argc)*sizeof(int) + line_size;
-	STACK_DEBUG("# total_size = %d\n", total_size);
+  /* calculate how many words the command_line contain */
+  STACK_DEBUG("# argc = %d\n", argc);
 
-	/* calculate where the final stack top for the program will be located */
-	esp = stack_top - total_size;
+  /* calculate the size needed on our simulated stack */
+  total_size = (4 + argc)*sizeof(int) + line_size;
+  STACK_DEBUG("# total_size = %d\n", total_size);
 
-	/* setup return address and argument count */
-	esp->ret = NULL;
-	esp->argc = argc;
-	/* calculate where in the memory the argv array starts */
-	esp->argv = esp + 1;
+  /* calculate where the final stack top for the program will be located */
+  esp = stack_top - total_size;
 
-	/* calculate where in the memory the words is stored */
-	cmd_line_on_stack = stack_top - line_size;
+  /* setup return address and argument count */
+  esp->ret = NULL;
+  esp->argc = argc;
+  /* calculate where in the memory the argv array starts */
+  esp->argv = esp + 1;
 
-	/* copy the command_line to where it should be in the stack */
-	strlcpy(cmd_line_on_stack, new_command_line, line_size);
+  /* calculate where in the memory the words is stored */
+  cmd_line_on_stack = stack_top - line_size;
 
-	/* build argv array and insert null-characters after each word */
-	esp->argv[0] = cmd_line_on_stack;
-	int i = 1;
-	for(curr = cmd_line_on_stack; *curr != '\0'; ++curr)
+  /* copy the command_line to where it should be in the stack */
+  strlcpy(cmd_line_on_stack, new_command_line, line_size);
+
+  /* build argv array and insert null-characters after each word */
+  esp->argv[0] = cmd_line_on_stack;
+  int i = 1;
+  for(curr = cmd_line_on_stack; *curr != '\0'; ++curr)
+    {
+      if(*curr == ' ')
 	{
-		if(*curr == ' ')
-		{
-			*curr = '\0';
-			esp->argv[i] = curr+1;
-			++i;
-		}
+	  *curr = '\0';
+	  esp->argv[i] = curr+1;
+	  ++i;
 	}
-	esp->argv[argc] = NULL;
+    }
+  esp->argv[argc] = NULL;
 
-	return esp; /* the new stack top */
+  return esp; /* the new stack top */
 }
 
 /* This function is called at boot time (threads/init.c) to initialize
@@ -153,6 +153,8 @@ void process_print_list()
 
 struct parameters_to_start_process
 {
+  struct semaphore* sema;
+  bool success;
   char* command_line;
 };
 
@@ -185,19 +187,22 @@ process_execute (const char *command_line)
   arguments.command_line = malloc(command_line_size);
   strlcpy(arguments.command_line, command_line, command_line_size);
 
-
   strlcpy_first_word (debug_name, command_line, 64);
+  
+  struct semaphore s;
+  sema_init(&s, 0);
+  arguments.sema = &s;
+  arguments.success = false;
 
   /* SCHEDULES function `start_process' to run (LATER) */
   thread_id = thread_create (debug_name, PRI_DEFAULT,
                              (thread_func*)start_process, &arguments);
-
-  process_id = thread_id;
-
-  /* AVOID bad stuff by turning off. YOU will fix this! */
-  power_off();
-
-
+  if (thread_id != -1)
+    sema_down(&s);
+  
+  if (arguments.success)
+    process_id = thread_id;
+  
   /* WHICH thread may still be using this right now? */
   free(arguments.command_line);
 
@@ -217,7 +222,6 @@ start_process (struct parameters_to_start_process* parameters)
 {
   /* The last argument passed to thread_create is received here... */
   struct intr_frame if_;
-  bool success;
 
   char file_name[64];
   strlcpy_first_word (file_name, parameters->command_line, 64);
@@ -233,52 +237,52 @@ start_process (struct parameters_to_start_process* parameters)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
 
-  success = load (file_name, &if_.eip, &if_.esp);
+  parameters->success = load (file_name, &if_.eip, &if_.esp);
 
   debug("%s#%d: start_process(...): load returned %d\n",
         thread_current()->name,
         thread_current()->tid,
-        success);
+        parameters->success);
 
-  if (success)
-  {
-    /* We managed to load the new program to a process, and have
-       allocated memory for a process stack. The stack top is in
-       if_.esp, now we must prepare and place the arguments to main on
-       the stack. */
+  if ( parameters->success )
+    {
+      /* We managed to load the new program to a process, and have
+	 allocated memory for a process stack. The stack top is in
+	 if_.esp, now we must prepare and place the arguments to main on
+	 the stack. */
 
-    /* A temporary solution is to modify the stack pointer to
-       "pretend" the arguments are present on the stack. A normal
-       C-function expects the stack to contain, in order, the return
-       address, the first argument, the second argument etc. */
+      /* A temporary solution is to modify the stack pointer to
+	 "pretend" the arguments are present on the stack. A normal
+	 C-function expects the stack to contain, in order, the return
+	 address, the first argument, the second argument etc. */
 
-    //HACK if_.esp -= 12; /* Unacceptable solution. */
-	 if_.esp = setup_main_stack(parameters->command_line, if_.esp);
+      //HACK if_.esp -= 12; /* Unacceptable solution. */
+      if_.esp = setup_main_stack(parameters->command_line, if_.esp);
 
-    /* The stack and stack pointer should be setup correct just before
-       the process start, so this is the place to dump stack content
-       for debug purposes. Disable the dump when it works. */
+      /* The stack and stack pointer should be setup correct just before
+	 the process start, so this is the place to dump stack content
+	 for debug purposes. Disable the dump when it works. */
 
-    dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
+      //dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
 
-  }
+    }
 
   debug("%s#%d: start_process(\"%s\") DONE\n",
         thread_current()->name,
         thread_current()->tid,
         parameters->command_line);
 
-
+  sema_up( parameters->sema );
   /* If load fail, quit. Load may fail for several reasons.
      Some simple examples:
      - File doeas not exist
      - File do not contain a valid program
      - Not enough memory
   */
-  if ( ! success )
-  {
-    thread_exit ();
-  }
+  if ( ! parameters->success )
+    {
+      thread_exit ();
+    }
 
   /* Start the user process by simulating a return from an interrupt,
      implemented by intr_exit (in threads/intr-stubs.S). Because
