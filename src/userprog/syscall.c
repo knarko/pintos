@@ -59,9 +59,9 @@ static int32_t
 sys_filesize(int32_t fd)
 {
   struct file *f = flist_find_file(fd, thread_current());
-  if (f == NULL) 
+  if (f == NULL)
     return -1;
-  return file_length(f);  
+  return file_length(f);
 }
 
 static int32_t
@@ -94,7 +94,7 @@ sys_write(const int32_t fd, char* buf, const int32_t len)
 }
 
 static void
-sys_file_seek(int32_t fd, off_t pos) 
+sys_file_seek(int32_t fd, off_t pos)
 {
   if (pos < 0)
     {
@@ -142,7 +142,7 @@ syscall_handler (struct intr_frame *f)
       break;
 
     case SYS_EXEC:
-      process_execute(esp[1]);
+      f->eax = process_execute(esp[1]);
       break;
 	/*
 	case SYS_WAIT:
@@ -159,7 +159,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_OPEN:
       f->eax = sys_open(esp[1]);
       break;
-      
+
     case SYS_FILESIZE:
       f->eax = sys_filesize(esp[1]);
       break;
@@ -179,7 +179,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_TELL:
       f->eax = sys_file_tell(esp[1]);
       break;
-      
+
     case SYS_CLOSE:
       sys_close(esp[1]);
       break;
