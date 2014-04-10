@@ -141,10 +141,10 @@ syscall_handler (struct intr_frame *f)
       thread_exit();
       break;
 
-      /*
-	case SYS_EXEC:
-	break;
-
+    case SYS_EXEC:
+      process_execute(esp[1]);
+      break;
+	/*
 	case SYS_WAIT:
 	break;
       */
@@ -182,6 +182,14 @@ syscall_handler (struct intr_frame *f)
       
     case SYS_CLOSE:
       sys_close(esp[1]);
+      break;
+
+    case SYS_SLEEP:
+      timer_msleep(esp[1]);
+      break;
+
+    case SYS_PLIST:
+
       break;
 
     default:
