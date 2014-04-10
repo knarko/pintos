@@ -37,7 +37,7 @@ struct thread;
    (probably when removed from the list(s)).
  */
 
-int32_t flist_add_file(struct file*, struct thread*);
+key_t flist_add_file(struct file*, struct thread*);
 value_t flist_find_file(int fd, struct thread*);
 value_t flist_remove_file(int fd, struct thread*);
 void flist_remove_process(struct thread*);
