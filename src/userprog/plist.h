@@ -36,13 +36,17 @@ struct process
 	char* name;
 	int parent;
 	int exit_status;
+  bool parent_dead;
+  bool is_alive;
 };
 
-key_t plist_add_process(struct map*, struct process*);
+key_t plist_add_process(struct map*, int, char*);
 struct process* plist_find_process(struct map*, key_t);
-struct process* plist_remove_process(struct map*, key_t);
+int plist_remove_process(struct map*, key_t);
 
 void plist_for_each(struct map*, void(*exec)(key_t, struct process*, int), int);
 void plist_remove_if(struct map*, bool(*exec)(key_t, struct process*, int), int);
+
+void plist_print_process(struct map* m);
 
 #endif

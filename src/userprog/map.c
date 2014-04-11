@@ -1,8 +1,6 @@
 #include "map.h"
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 
 void map_init(struct map* m)
@@ -24,7 +22,8 @@ key_t map_insert(struct map* m, value_t value)
 
 value_t map_find(struct map* m, key_t key)
 {
-  for(struct list_elem *e = list_begin(&(m->content));
+  struct list_elem* e;
+  for(e = list_begin(&(m->content));
       e != list_end(&(m->content)); e = list_next(e))
   {
     struct association *f = list_entry(e, struct association, elem);
@@ -38,7 +37,8 @@ value_t map_find(struct map* m, key_t key)
 
 value_t map_remove(struct map* m, key_t key)
 {
-  for(struct list_elem *e = list_begin(&(m->content));
+  struct list_elem *e;
+  for(e = list_begin(&(m->content));
       e != list_end(&(m->content)); e = list_next(e))
   {
     struct association *f = list_entry(e, struct association, elem);
@@ -55,7 +55,8 @@ value_t map_remove(struct map* m, key_t key)
 
 void map_for_each(struct map* m, void(*exec)(key_t k, value_t v, int i), int aux)
 {
-  for(struct list_elem *e = list_begin(&(m->content));
+  struct list_elem *e;
+  for(e = list_begin(&(m->content));
       e != list_end(&(m->content)); e = list_next(e))
   {
     struct association *f = list_entry(e, struct association, elem);
@@ -66,19 +67,20 @@ void map_for_each(struct map* m, void(*exec)(key_t k, value_t v, int i), int aux
 
 void map_remove_if(struct map* m, bool(*exec)(key_t, value_t, int), int aux)
 {
-  for(struct list_elem *e = list_begin(&(m->content));
-      e != list_end(&(m->content));)
-  {
-    struct association *f = list_entry(e, struct association, elem);
-    if (exec(f->key, f->value, aux))
+  struct list_elem *e;
+    for(e = list_begin(&(m->content));
+        e != list_end(&(m->content));)
     {
-      e = list_remove(e);
-      free(f);
+      struct association *f = list_entry(e, struct association, elem);
+      if (exec(f->key, f->value, aux))
+      {
+        e = list_remove(e);
+        free(f);
+      }
+      else
+      {
+        e = list_next(e);
+      }
     }
-    else
-    {
-      e = list_next(e);
-    }
-  }
   return;
 }

@@ -150,17 +150,11 @@ void process_exit(int status UNUSED)
 }
 
 
-void print_process(key_t k, struct process* p,  int aux)
-{
-  printf("%i %s (%i)\n", k, p->name, p->parent);
-}
 /* Print a list of all running processes. The list shall include all
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
-  printf("PID NAME PARENT\n");
-  plist_for_each(&process_list, &print_process, 0);
-  printf("\n");
+  plist_print_process(&process_list);
 }
 
 
@@ -261,14 +255,9 @@ start_process (struct parameters_to_start_process* parameters)
 
   if ( parameters->success )
   {
-
-
-    struct process* p = malloc(sizeof(struct process));
-    p->parent = parameters->pid;
-    p->name = thread_current()->name;
-    p->exit_status = 0;
-    parameters->pid = plist_add_process(&process_list, p);
+    parameters->pid = plist_add_process(&process_list, parameters->pid, thread_current()->name);
     thread_current()->pid = parameters->pid;
+
     process_print_list();
     /* We managed to load the new program to a process, and have
        allocated memory for a process stack. The stack top is in
@@ -360,11 +349,10 @@ process_cleanup (void)
   uint32_t       *pd  = cur->pagedir;
   int status = -1;
 
-  flist_remove_process(cur);
-
   debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
 
-  plist_remove_process(&process_list, cur->pid);
+  flist_remove_process(cur);
+  status = plist_remove_process(&process_list, cur->pid);
 
   /* Later tests DEPEND on this output to work correct. You will have
    * to find the actual exit status in your process list. It is
