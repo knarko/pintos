@@ -20,9 +20,13 @@
 
 #include "userprog/flist.h"
 #include "userprog/plist.h"
+#include "userprog/map.h"
 
 /* HACK defines code you must remove and implement in a proper way */
 #define HACK
+
+
+struct map process_list;
 
 struct main_args
 {
@@ -133,6 +137,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
  * the process subsystem. */
 void process_init(void)
 {
+	map_init(&process_list);
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -148,6 +153,7 @@ void process_exit(int status UNUSED)
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
+
 }
 
 
@@ -155,6 +161,7 @@ struct parameters_to_start_process
 {
   struct semaphore* sema;
   bool success;
+  int pid;
   char* command_line;
 };
 
@@ -188,21 +195,22 @@ process_execute (const char *command_line)
   strlcpy(arguments.command_line, command_line, command_line_size);
 
   strlcpy_first_word (debug_name, command_line, 64);
-  
+
   struct semaphore s;
   sema_init(&s, 0);
   arguments.sema = &s;
   arguments.success = false;
+  arguments.pid = thread_current()->pid;
 
   /* SCHEDULES function `start_process' to run (LATER) */
   thread_id = thread_create (debug_name, PRI_DEFAULT,
                              (thread_func*)start_process, &arguments);
   if (thread_id != -1)
     sema_down(&s);
-  
+
   if (arguments.success)
-    process_id = thread_id;
-  
+    process_id = arguments.pid;;
+
   /* WHICH thread may still be using this right now? */
   free(arguments.command_line);
 
@@ -246,6 +254,13 @@ start_process (struct parameters_to_start_process* parameters)
 
   if ( parameters->success )
     {
+
+
+		 struct process* p = malloc(sizeof(struct process));
+		 p->parent = parameters->pid;
+		 p->name = thread_current()->name;
+		 p->exit_status = 0;
+		 parameters->pid = plist_add_process(p, &process_list);
       /* We managed to load the new program to a process, and have
 	 allocated memory for a process stack. The stack top is in
 	 if_.esp, now we must prepare and place the arguments to main on
