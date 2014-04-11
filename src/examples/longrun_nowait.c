@@ -4,24 +4,24 @@
 
    Start a lot of processes and let them finish to test if we
    eventually run out of process slots.
- 
+
     'longrun_nowait 10 50'
- 
+
    Will call generic_parent to start 10 children 50 times (500
    processes). One slot will be used by longrun_nowait itself. 50
    slots will be used by generic_parent (they must be kept so long as
    longrun_nowait still execute, since it may want to wait for any of
    them). All other slots needed should also be freed as soon as both
    generic_parent and it's set of children exits.
-  
+
    To run the test effectively, if you have a limit on number of
    processes, lower that limit to 61 processes and run this test like
- 
+
     'longrun_nowait 10 50'
- 
+
    Note that some pintos tests requires at least 16 simultaneous
    processes to work, so be sure to increase the limit before running
-   pintos tests.   
+   pintos tests.
  */
 
 #include <syscall.h>
@@ -58,27 +58,27 @@ int main(int argc, char* argv[])
            "simultaneos processes.\n", MAX_SIMULTANEOUS);
     return -1;
   }
-  
+
   if (repeat > MAX_REPEAT)
   {
     printf("This test program is compiled with a limitation to max %d \n"
            "repetitions.\n", MAX_REPEAT);
     return -1;
   }
-  
+
   printf("Will try to start a total of %d processes in groups of %d\n",
          simul * repeat, simul);
-  
+
   for (j = 0; j < repeat; ++j)
   {
     /* you may have to increase the multiple to more than 5 */
     int ticks = 10 * 1000 * 1000 * j / repeat;
-    
+
     snprintf(cmd, BUF_SIZE, "generic_parent %s %i %i", "dummy", j*simul, simul);
-    
+
     exec(cmd);
-    
-//    plist();
+
+    plist();
 
     /* since we do not have the wait systemcall yet */
     printf("Now entering busy-loop to let some processes finish\n");

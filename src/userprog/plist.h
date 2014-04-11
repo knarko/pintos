@@ -38,8 +38,11 @@ struct process
 	int exit_status;
 };
 
-key_t plist_add_process(struct process*, struct map*);
-//value_t plist_find_process(int id, struct map*);
-//value_t plist_remove_process(int id, struct map*);
+key_t plist_add_process(struct map*, struct process*);
+struct process* plist_find_process(struct map*, key_t);
+struct process* plist_remove_process(struct map*, key_t);
+
+void plist_for_each(struct map*, void(*exec)(key_t, struct process*, int), int);
+void plist_remove_if(struct map*, bool(*exec)(key_t, struct process*, int), int);
 
 #endif

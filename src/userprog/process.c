@@ -77,17 +77,17 @@ void* setup_main_stack(const char* command_line, void* stack_top)
   argc = 0;
   line_size = 0;
   for(curr = strtok_r(new_command_line, " ", &saveptr); curr != NULL; curr = strtok_r(NULL, " ", &saveptr))
+  {
+    ++argc;
+    for(;*curr != '\0';++curr)
     {
-      ++argc;
-      for(;*curr != '\0';++curr)
-	{
-	  *(new_command_line+line_size) = *curr;
-	  ++line_size;
-	}
-      *(new_command_line+line_size) = ' ';
+      *(new_command_line+line_size) = *curr;
       ++line_size;
-
     }
+    *(new_command_line+line_size) = ' ';
+    ++line_size;
+
+  }
   *(new_command_line+line_size) = '\0';
   STACK_DEBUG("# new_command_line = '%s'\n# new_line_size = '%d'\n", new_command_line, line_size);
   /* round up to make it even divisible by 4 */
@@ -120,14 +120,14 @@ void* setup_main_stack(const char* command_line, void* stack_top)
   esp->argv[0] = cmd_line_on_stack;
   int i = 1;
   for(curr = cmd_line_on_stack; *curr != '\0'; ++curr)
+  {
+    if(*curr == ' ')
     {
-      if(*curr == ' ')
-	{
-	  *curr = '\0';
-	  esp->argv[i] = curr+1;
-	  ++i;
-	}
+      *curr = '\0';
+      esp->argv[i] = curr+1;
+      ++i;
     }
+  }
   esp->argv[argc] = NULL;
 
   return esp; /* the new stack top */
@@ -137,7 +137,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
  * the process subsystem. */
 void process_init(void)
 {
-	map_init(&process_list);
+  map_init(&process_list);
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -149,11 +149,18 @@ void process_exit(int status UNUSED)
 {
 }
 
+
+void print_process(key_t k, struct process* p,  int aux)
+{
+  printf("%i %s (%i)\n", k, p->name, p->parent);
+}
 /* Print a list of all running processes. The list shall include all
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
-
+  printf("PID NAME PARENT\n");
+  plist_for_each(&process_list, &print_process, 0);
+  printf("\n");
 }
 
 
@@ -174,7 +181,7 @@ start_process(struct parameters_to_start_process* parameters) NO_RETURN;
    be scheduled (and may even exit) before process_execute() returns.
    Returns the new process's thread id, or TID_ERROR if the thread
    cannot be created. */
-int
+  int
 process_execute (const char *command_line)
 {
   char debug_name[64];
@@ -186,9 +193,9 @@ process_execute (const char *command_line)
   struct parameters_to_start_process arguments;
 
   debug("%s#%d: process_execute(\"%s\") ENTERED\n",
-        thread_current()->name,
-        thread_current()->tid,
-        command_line);
+      thread_current()->name,
+      thread_current()->tid,
+      command_line);
 
   /* COPY command line out of parent process memory */
   arguments.command_line = malloc(command_line_size);
@@ -204,7 +211,7 @@ process_execute (const char *command_line)
 
   /* SCHEDULES function `start_process' to run (LATER) */
   thread_id = thread_create (debug_name, PRI_DEFAULT,
-                             (thread_func*)start_process, &arguments);
+      (thread_func*)start_process, &arguments);
   if (thread_id != -1)
     sema_down(&s);
 
@@ -215,9 +222,9 @@ process_execute (const char *command_line)
   free(arguments.command_line);
 
   debug("%s#%d: process_execute(\"%s\") RETURNS %d\n",
-        thread_current()->name,
-        thread_current()->tid,
-        command_line, process_id);
+      thread_current()->name,
+      thread_current()->tid,
+      command_line, process_id);
 
   /* MUST be -1 if `load' in `start_process' return false */
   return process_id;
@@ -225,7 +232,7 @@ process_execute (const char *command_line)
 
 /* A thread function that loads a user process and starts it
    running. */
-static void
+  static void
 start_process (struct parameters_to_start_process* parameters)
 {
   /* The last argument passed to thread_create is received here... */
@@ -235,9 +242,9 @@ start_process (struct parameters_to_start_process* parameters)
   strlcpy_first_word (file_name, parameters->command_line, 64);
 
   debug("%s#%d: start_process(\"%s\") ENTERED\n",
-        thread_current()->name,
-        thread_current()->tid,
-        parameters->command_line);
+      thread_current()->name,
+      thread_current()->tid,
+      parameters->command_line);
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -248,44 +255,46 @@ start_process (struct parameters_to_start_process* parameters)
   parameters->success = load (file_name, &if_.eip, &if_.esp);
 
   debug("%s#%d: start_process(...): load returned %d\n",
-        thread_current()->name,
-        thread_current()->tid,
-        parameters->success);
+      thread_current()->name,
+      thread_current()->tid,
+      parameters->success);
 
   if ( parameters->success )
-    {
+  {
 
 
-		 struct process* p = malloc(sizeof(struct process));
-		 p->parent = parameters->pid;
-		 p->name = thread_current()->name;
-		 p->exit_status = 0;
-		 parameters->pid = plist_add_process(p, &process_list);
-      /* We managed to load the new program to a process, and have
-	 allocated memory for a process stack. The stack top is in
-	 if_.esp, now we must prepare and place the arguments to main on
-	 the stack. */
+    struct process* p = malloc(sizeof(struct process));
+    p->parent = parameters->pid;
+    p->name = thread_current()->name;
+    p->exit_status = 0;
+    parameters->pid = plist_add_process(&process_list, p);
+    thread_current()->pid = parameters->pid;
+    process_print_list();
+    /* We managed to load the new program to a process, and have
+       allocated memory for a process stack. The stack top is in
+       if_.esp, now we must prepare and place the arguments to main on
+       the stack. */
 
-      /* A temporary solution is to modify the stack pointer to
-	 "pretend" the arguments are present on the stack. A normal
-	 C-function expects the stack to contain, in order, the return
-	 address, the first argument, the second argument etc. */
+    /* A temporary solution is to modify the stack pointer to
+       "pretend" the arguments are present on the stack. A normal
+       C-function expects the stack to contain, in order, the return
+       address, the first argument, the second argument etc. */
 
-      //HACK if_.esp -= 12; /* Unacceptable solution. */
-      if_.esp = setup_main_stack(parameters->command_line, if_.esp);
+    //HACK if_.esp -= 12; /* Unacceptable solution. */
+    if_.esp = setup_main_stack(parameters->command_line, if_.esp);
 
-      /* The stack and stack pointer should be setup correct just before
-	 the process start, so this is the place to dump stack content
-	 for debug purposes. Disable the dump when it works. */
+    /* The stack and stack pointer should be setup correct just before
+       the process start, so this is the place to dump stack content
+       for debug purposes. Disable the dump when it works. */
 
-      //dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
+    //dump_stack ( PHYS_BASE + 15, PHYS_BASE - if_.esp + 16 );
 
-    }
+  }
 
   debug("%s#%d: start_process(\"%s\") DONE\n",
-        thread_current()->name,
-        thread_current()->tid,
-        parameters->command_line);
+      thread_current()->name,
+      thread_current()->tid,
+      parameters->command_line);
 
   sema_up( parameters->sema );
   /* If load fail, quit. Load may fail for several reasons.
@@ -293,11 +302,11 @@ start_process (struct parameters_to_start_process* parameters)
      - File doeas not exist
      - File do not contain a valid program
      - Not enough memory
-  */
+     */
   if ( ! parameters->success )
-    {
-      thread_exit ();
-    }
+  {
+    thread_exit ();
+  }
 
   /* Start the user process by simulating a return from an interrupt,
      implemented by intr_exit (in threads/intr-stubs.S). Because
@@ -317,17 +326,17 @@ start_process (struct parameters_to_start_process* parameters)
 
    This function will be implemented last, after a communication
    mechanism between parent and child is established. */
-int
+  int
 process_wait (int child_id)
 {
   int status = -1;
   struct thread *cur = thread_current ();
 
   debug("%s#%d: process_wait(%d) ENTERED\n",
-        cur->name, cur->tid, child_id);
+      cur->name, cur->tid, child_id);
   /* Yes! You need to do something good here ! */
   debug("%s#%d: process_wait(%d) RETURNS %d\n",
-        cur->name, cur->tid, child_id, status);
+      cur->name, cur->tid, child_id, status);
 
   return status;
 }
@@ -342,19 +351,20 @@ process_wait (int child_id)
    initialized. You must make sure that nay data needed IS available
    or initialized to something sane, or else that any such situation
    is detected.
-*/
+   */
 
-void
+  void
 process_cleanup (void)
 {
   struct thread  *cur = thread_current ();
   uint32_t       *pd  = cur->pagedir;
   int status = -1;
 
-
   flist_remove_process(cur);
 
   debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
+
+  plist_remove_process(&process_list, cur->pid);
 
   /* Later tests DEPEND on this output to work correct. You will have
    * to find the actual exit status in your process list. It is
@@ -368,26 +378,26 @@ process_cleanup (void)
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   if (pd != NULL)
-    {
-      /* Correct ordering here is crucial.  We must set
-         cur->pagedir to NULL before switching page directories,
-         so that a timer interrupt can't switch back to the
-         process page directory.  We must activate the base page
-         directory before destroying the process's page
-         directory, or our active page directory will be one
-         that's been freed (and cleared). */
-      cur->pagedir = NULL;
-      pagedir_activate (NULL);
-      pagedir_destroy (pd);
-    }
+  {
+    /* Correct ordering here is crucial.  We must set
+       cur->pagedir to NULL before switching page directories,
+       so that a timer interrupt can't switch back to the
+       process page directory.  We must activate the base page
+       directory before destroying the process's page
+       directory, or our active page directory will be one
+       that's been freed (and cleared). */
+    cur->pagedir = NULL;
+    pagedir_activate (NULL);
+    pagedir_destroy (pd);
+  }
   debug("%s#%d: process_cleanup() DONE with status %d\n",
-        cur->name, cur->tid, status);
+      cur->name, cur->tid, status);
 }
 
 /* Sets up the CPU for running user code in the current
    thread.
    This function is called on every context switch. */
-void
+  void
 process_activate (void)
 {
   struct thread *t = thread_current ();

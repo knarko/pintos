@@ -189,7 +189,7 @@ syscall_handler (struct intr_frame *f)
       break;
 
     case SYS_PLIST:
-
+      process_print_list();
       break;
 
     default:
