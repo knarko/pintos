@@ -142,7 +142,7 @@ syscall_handler (struct intr_frame *f)
       break;
 
     case SYS_EXEC:
-      f->eax = process_execute(esp[1]);
+      f->eax = process_execute((char*)esp[1]);
       break;
 	/*
 	case SYS_WAIT:

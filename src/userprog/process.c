@@ -258,7 +258,7 @@ start_process (struct parameters_to_start_process* parameters)
     parameters->pid = plist_add_process(&process_list, parameters->pid, thread_current()->name);
     thread_current()->pid = parameters->pid;
 
-    process_print_list();
+   // process_print_list();
     /* We managed to load the new program to a process, and have
        allocated memory for a process stack. The stack top is in
        if_.esp, now we must prepare and place the arguments to main on

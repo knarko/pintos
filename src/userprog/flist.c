@@ -8,6 +8,13 @@
 #include "threads/thread.h"
 #include "userprog/map.h"
 
+
+void flist_init(struct map* m)
+{
+ map_init(m);
+ m->next_key = 2;
+}
+
 /*
   A function that given a file (struct file*, see filesys/file.h)
   and a process id INSERT this in a list of files. Return an
