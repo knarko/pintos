@@ -2,7 +2,7 @@
 
 #include "plist.h"
 
-void print_process(key_t, struct process*, int);
+void plist_print_process(key_t, struct process*, int);
 bool flag_children(key_t, struct process*, key_t);
 
 key_t plist_add_process(struct map* m, int parent_id, char* name)
@@ -30,14 +30,14 @@ int plist_remove_process(struct map* m , key_t k)
   return status;
 }
 
-void plist_print_process(struct map* m)
+void plist_print_all(struct map* m)
 {
   printf("%-3s %-16s %-11s %-6s %-6s %-13s\n", "PID", "NAME", "EXIT_STATUS", "ALIVE?", "PARENT", "PARENT_ALIVE?");
-  map_for_each(m, &print_process, 0);
+  map_for_each(m, &plist_print_process, 0);
   printf("\n");
 }
 
-void print_process(key_t k, struct process* p, int aux)
+void plist_print_process(key_t k, struct process* p, int aux)
 {
   if(p != NULL)
   {

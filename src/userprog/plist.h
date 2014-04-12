@@ -47,6 +47,6 @@ int plist_remove_process(struct map*, key_t);
 void plist_for_each(struct map*, void(*exec)(key_t, struct process*, int), int);
 void plist_remove_if(struct map*, bool(*exec)(key_t, struct process*, int), int);
 
-void plist_print_process(struct map* m);
+void plist_print_all(struct map* m);
 
 #endif

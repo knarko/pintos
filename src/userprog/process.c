@@ -154,7 +154,7 @@ void process_exit(int status UNUSED)
  * relevant debug information in a clean, readable format. */
 void process_print_list()
 {
-  plist_print_process(&process_list);
+  plist_print_all(&process_list);
 }
 
 
