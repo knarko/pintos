@@ -117,6 +117,7 @@ init_thread (struct thread *t, const char *name, int priority)
 
   /* YES! You may want add stuff here. */
   flist_init(&(t->open_files));
+  t->pid = 0;
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
