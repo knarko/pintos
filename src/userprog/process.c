@@ -72,11 +72,12 @@ void* setup_main_stack(const char* command_line, void* stack_top)
 
   char* new_command_line = malloc(line_size);
   strlcpy(new_command_line, command_line, line_size);
+  printf("'%s'\n",new_command_line);
   char* curr;
   char** saveptr;
   argc = 0;
   line_size = 0;
-  for(curr = strtok_r(new_command_line, " ", &saveptr); curr != NULL; curr = strtok_r(NULL, " ", &saveptr))
+  for(curr = strtok_r(new_command_line, " ", &saveptr); curr != NULL; )
   {
     ++argc;
     for(;*curr != '\0';++curr)
@@ -84,6 +85,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
       *(new_command_line+line_size) = *curr;
       ++line_size;
     }
+    curr = strtok_r(NULL, " ", &saveptr);
     *(new_command_line+line_size) = ' ';
     ++line_size;
 
@@ -145,8 +147,10 @@ void process_init(void)
  * instead. Note however that all cleanup after a process must be done
  * in process_cleanup, and that process_cleanup are already called
  * from thread_exit - do not call cleanup twice! */
-void process_exit(int status UNUSED)
+void process_exit(int status)
 {
+  plist_set_exit_status(&process_list, thread_current()->pid, status);
+  thread_exit();
 }
 
 
@@ -174,7 +178,9 @@ start_process(struct parameters_to_start_process* parameters) NO_RETURN;
    started with the arguments on the COMMAND_LINE. The new thread may
    be scheduled (and may even exit) before process_execute() returns.
    Returns the new process's thread id, or TID_ERROR if the thread
-   cannot be created. */
+   cannot be created.
+   */
+
   int
 process_execute (const char *command_line)
 {
@@ -202,6 +208,7 @@ process_execute (const char *command_line)
   arguments.sema = &s;
   arguments.success = false;
   arguments.pid = thread_current()->pid;
+  debug(" parent is: %d\n",arguments.pid);
 
   /* SCHEDULES function `start_process' to run (LATER) */
   thread_id = thread_create (debug_name, PRI_DEFAULT,
@@ -210,7 +217,7 @@ process_execute (const char *command_line)
     sema_down(&s);
 
   if (arguments.success)
-    process_id = arguments.pid;;
+    process_id = arguments.pid;
 
   /* WHICH thread may still be using this right now? */
   free(arguments.command_line);
@@ -258,7 +265,7 @@ start_process (struct parameters_to_start_process* parameters)
     parameters->pid = plist_add_process(&process_list, parameters->pid, thread_current()->name);
     thread_current()->pid = parameters->pid;
 
-   // process_print_list();
+    // process_print_list();
     /* We managed to load the new program to a process, and have
        allocated memory for a process stack. The stack top is in
        if_.esp, now we must prepare and place the arguments to main on
@@ -353,6 +360,7 @@ process_cleanup (void)
 
   flist_remove_process(cur);
   status = plist_remove_process(&process_list, cur->pid);
+  //process_print_list();
 
   /* Later tests DEPEND on this output to work correct. You will have
    * to find the actual exit status in your process list. It is

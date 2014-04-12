@@ -137,8 +137,8 @@ syscall_handler (struct intr_frame *f)
       break;
 
     case SYS_EXIT:
-      DBG("#Exit status: %i", esp[1]);
-      thread_exit();
+      //DBG("#Exit status: %i", esp[1]);
+      process_exit(esp[1]);
       break;
 
     case SYS_EXEC:
