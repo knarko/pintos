@@ -32,7 +32,7 @@ void syscall_init (void)
 
    All system calls have a name such as SYS_READ defined as an enum
    type, see `lib/syscall-nr.h'. Use them instead of numbers.
-*/
+   */
 const int argc[] = {
   /* basic calls */
   0, 1, 1, 1, 2, 1, 1, 1, 3, 3, 2, 1, 1,
@@ -43,19 +43,19 @@ const int argc[] = {
 };
 
 
-static int32_t
+  static int32_t
 sys_open(char* fname)
 {
   struct file* ofile = filesys_open(fname);
   if(ofile != NULL)
-    {
-      return flist_add_file(ofile, thread_current());
-    } else {
+  {
+    return flist_add_file(ofile, thread_current());
+  } else {
     return -1;
   }
 }
 
-static int32_t
+  static int32_t
 sys_filesize(int32_t fd)
 {
   struct file *f = flist_find_file(fd, thread_current());
@@ -64,51 +64,51 @@ sys_filesize(int32_t fd)
   return file_length(f);
 }
 
-static int32_t
+  static int32_t
 sys_read(const int32_t fd, char* buf, const int32_t len)
 {
   if (fd == STDIN_FILENO)
+  {
+    char c;
+    int i;
+    for (i = 0; i < len; ++i)
     {
-      char c;
-      int i;
-      for (i = 0; i < len; ++i)
-	{
-	  c = input_getc();
-	  buf[i] = c == '\r'? '\n' : c;
-	  putchar(c);
-	}
-      return i;
+      c = input_getc();
+      buf[i] = c == '\r'? '\n' : c;
+      putchar(c);
     }
+    return i;
+  }
   return -1;
 }
 
-static int32_t
+  static int32_t
 sys_write(const int32_t fd, char* buf, const int32_t len)
 {
   if (fd == STDOUT_FILENO)
-    {
-      putbuf(buf, len);
-      return len;
-    }
+  {
+    putbuf(buf, len);
+    return len;
+  }
   return -1;
 }
 
-static void
+  static void
 sys_file_seek(int32_t fd, off_t pos)
 {
   if (pos < 0)
-    {
-      return;
-    }
+  {
+    return;
+  }
 
   struct file *f = flist_find_file(fd, thread_current());
   if (f != NULL || pos <= file_length(f))
-    {
-      file_seek(f, pos);
-    }
+  {
+    file_seek(f, pos);
+  }
 }
 
-static off_t
+  static off_t
 sys_file_tell(int32_t fd)
 {
   struct file *f = flist_find_file(fd, thread_current());
@@ -117,7 +117,7 @@ sys_file_tell(int32_t fd)
   return -1;
 }
 
-static void
+  static void
 sys_close(int32_t fd)
 {
   filesys_close(flist_remove_file(fd, thread_current()));
@@ -125,13 +125,13 @@ sys_close(int32_t fd)
 
 
 
-static void
+  static void
 syscall_handler (struct intr_frame *f)
 {
   int32_t* esp = (int32_t*)f->esp;
 
   switch ( esp[0] )
-    {
+  {
     case SYS_HALT:
       power_off();
       break;
@@ -144,10 +144,10 @@ syscall_handler (struct intr_frame *f)
     case SYS_EXEC:
       f->eax = process_execute((char*)esp[1]);
       break;
-	/*
-	case SYS_WAIT:
-	break;
-      */
+
+    case SYS_WAIT:
+      process_wait(esp[1]);
+      break;
 
     case SYS_CREATE:
       f->eax = filesys_create((const char*)esp[1], esp[2]);
@@ -194,12 +194,12 @@ syscall_handler (struct intr_frame *f)
 
     default:
       {
-	printf ("Executed an unknown system call!\n");
+        printf ("Executed an unknown system call!\n");
 
-	printf ("Stack top + 0: %d\n", esp[0]);
-	printf ("Stack top + 1: %d\n", esp[1]);
+        printf ("Stack top + 0: %d\n", esp[0]);
+        printf ("Stack top + 1: %d\n", esp[1]);
 
-	thread_exit ();
+        thread_exit ();
       }
-    }
+  }
 }

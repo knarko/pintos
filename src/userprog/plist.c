@@ -5,33 +5,40 @@
 void plist_print_process(key_t, struct process*, int);
 bool flag_children(key_t, struct process*, key_t);
 
-key_t plist_add_process(struct map* m, int parent_id, char* name)
+key_t plist_add_process(struct map* m, int parent_id, char* name, struct semaphore* sema)
 {
-  int pid = -1;
   struct process* p = malloc(sizeof(struct process));
   char* nameptr = malloc(sizeof(strlen(name))+1);
   strlcpy(nameptr, name, strlen(name)+1);
   p->name = nameptr;
+  p->parent = parent_id;
+  p->sema = sema;
   p->exit_status = 0;
   p->parent_dead = 0;
   p->is_alive = 1;
-  pid = map_insert(m, p);
-  p->parent = parent_id == 0 ? pid : parent_id;
-  return pid;
+  return map_insert(m, p);
 
 }
 
-int plist_remove_process(struct map* m , key_t k)
+struct process* plist_find_process(struct map* m, key_t k)
 {
-  int status = -1;
+  return map_find(m, k);
+}
+
+void plist_remove_process(struct map* m , key_t k)
+{
   struct process* p = map_find(m, k);
   if(p != NULL)
   {
     p->is_alive = 0;
-    status = p->exit_status;
     map_remove_if(m, &flag_children, k);
   }
-  return status;
+}
+
+void plist_force_remove_process(struct map*, key_t)
+{
+  plist_remove_process(m, k);
+  map_remove(m, k);
 }
 
 void plist_print_all(struct map* m)

@@ -72,7 +72,6 @@ void* setup_main_stack(const char* command_line, void* stack_top)
 
   char* new_command_line = malloc(line_size);
   strlcpy(new_command_line, command_line, line_size);
-  printf("'%s'\n",new_command_line);
   char* curr;
   char** saveptr;
   argc = 0;
@@ -262,7 +261,9 @@ start_process (struct parameters_to_start_process* parameters)
 
   if ( parameters->success )
   {
-    parameters->pid = plist_add_process(&process_list, parameters->pid, thread_current()->name);
+    struct semaphore* sema = (struct semaphore*) malloc(sizeof(struct semaphore));
+    sema_init(sema, 0);
+    parameters->pid = plist_add_process(&process_list, parameters->pid, thread_current()->name, sema);
     thread_current()->pid = parameters->pid;
 
     // process_print_list();
@@ -329,8 +330,18 @@ process_wait (int child_id)
   struct thread *cur = thread_current ();
 
   debug("%s#%d: process_wait(%d) ENTERED\n",
-      cur->name, cur->tid, child_id);
+      cur->name, cur->pid, child_id);
   /* Yes! You need to do something good here ! */
+  struct process* p = plist_find_process(&process_list, child_id);
+  debug("parent of process is: %i\n", p->parent);
+  if (p != NULL && p->parent == cur->pid)
+  {
+    struct semaphore* sema = p->sema;
+    sema_down(sema);
+    status = p->exit_status;
+    free(sema);
+    plist_force_remove_process(&process_list, child_id);
+  }
   debug("%s#%d: process_wait(%d) RETURNS %d\n",
       cur->name, cur->tid, child_id, status);
 
@@ -359,17 +370,28 @@ process_cleanup (void)
   debug("%s#%d: process_cleanup() ENTERED\n", cur->name, cur->tid);
 
   flist_remove_process(cur);
-  status = plist_remove_process(&process_list, cur->pid);
-  //process_print_list();
+  struct process* process = plist_find_process(&process_list, cur->pid);
 
   /* Later tests DEPEND on this output to work correct. You will have
    * to find the actual exit status in your process list. It is
    * important to do this printf BEFORE you tell the parent process
    * that you exit.  (Since the parent may be the main() function,
    * that may sometimes poweroff as soon as process_wait() returns,
-   * possibly before the prontf is completed.)
+   * possibly before the printf is completed.)
    */
-  printf("%s: exit(%d)\n", thread_name(), status);
+  printf("%s: exit(%d)\n", thread_name(), process->exit_status);
+
+  struct semaphore* sema = process->sema;
+  if(list_empty(sema->waiters))
+  {
+    free(sema);
+  }
+  else
+  {
+    sema_up(sema);
+  }
+  plist_remove_process(&process_list, cur->pid);
+
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
