@@ -382,7 +382,7 @@ process_cleanup (void)
   printf("%s: exit(%d)\n", thread_name(), process->exit_status);
 
   struct semaphore* sema = process->sema;
-  if(list_empty(sema->waiters))
+  if(list_empty(&sema->waiters))
   {
     free(sema);
   }

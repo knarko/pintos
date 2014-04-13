@@ -35,7 +35,7 @@ void plist_remove_process(struct map* m , key_t k)
   }
 }
 
-void plist_force_remove_process(struct map*, key_t)
+void plist_force_remove_process(struct map* m, key_t k)
 {
   plist_remove_process(m, k);
   map_remove(m, k);
