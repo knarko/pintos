@@ -33,7 +33,7 @@
 
 struct process
 {
-	char* name;
+	char name[16];
 	int parent;
 	int exit_status;
   int parent_dead;

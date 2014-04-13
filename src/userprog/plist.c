@@ -8,9 +8,7 @@ bool flag_children(key_t, struct process*, key_t);
 key_t plist_add_process(struct map* m, int parent_id, char* name, struct semaphore* sema)
 {
   struct process* p = malloc(sizeof(struct process));
-  char* nameptr = malloc(sizeof(strlen(name))+1);
-  strlcpy(nameptr, name, strlen(name)+1);
-  p->name = nameptr;
+  strlcpy(p->name, name, 16);
   p->parent = parent_id;
   p->sema = sema;
   p->exit_status = 0;
@@ -74,7 +72,6 @@ bool flag_children(key_t k, struct process* p, key_t parent)
     }
     if(p->parent_dead && !p->is_alive)
     {
-      free(p->name);
       free(p);
       return 1;
     }

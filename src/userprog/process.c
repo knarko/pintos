@@ -71,6 +71,10 @@ void* setup_main_stack(const char* command_line, void* stack_top)
   STACK_DEBUG("# line_size = %d\n", line_size);
 
   char* new_command_line = malloc(line_size);
+  if(new_command_line == NULL)
+  {
+    return NULL;
+  }
   strlcpy(new_command_line, command_line, line_size);
   char* curr;
   char** saveptr;
@@ -259,9 +263,12 @@ start_process (struct parameters_to_start_process* parameters)
       thread_current()->tid,
       parameters->success);
 
+  struct semaphore* sema = malloc(sizeof(struct semaphore));
+  if(sema == NULL)
+    parameters->success = false;
+
   if ( parameters->success )
   {
-    struct semaphore* sema = (struct semaphore*) malloc(sizeof(struct semaphore));
     sema_init(sema, 0);
     parameters->pid = plist_add_process(&process_list, parameters->pid, thread_current()->name, sema);
     thread_current()->pid = parameters->pid;
@@ -279,6 +286,10 @@ start_process (struct parameters_to_start_process* parameters)
 
     //HACK if_.esp -= 12; /* Unacceptable solution. */
     if_.esp = setup_main_stack(parameters->command_line, if_.esp);
+    if( if_.esp == NULL )
+    {
+      parameters->success = false;
+    }
 
     /* The stack and stack pointer should be setup correct just before
        the process start, so this is the place to dump stack content
@@ -333,7 +344,6 @@ process_wait (int child_id)
       cur->name, cur->pid, child_id);
   /* Yes! You need to do something good here ! */
   struct process* p = plist_find_process(&process_list, child_id);
-  debug("parent of process is: %i\n", p->parent);
   if (p != NULL && p->parent == cur->pid)
   {
     struct semaphore* sema = p->sema;
@@ -371,6 +381,10 @@ process_cleanup (void)
 
   flist_remove_process(cur);
   struct process* process = plist_find_process(&process_list, cur->pid);
+  if(process != NULL)
+  {
+    status = process->exit_status;
+  }
 
   /* Later tests DEPEND on this output to work correct. You will have
    * to find the actual exit status in your process list. It is
@@ -379,19 +393,14 @@ process_cleanup (void)
    * that may sometimes poweroff as soon as process_wait() returns,
    * possibly before the printf is completed.)
    */
-  printf("%s: exit(%d)\n", thread_name(), process->exit_status);
+  printf("%s: exit(%d)\n", thread_name(), status);
 
-  struct semaphore* sema = process->sema;
-  if(list_empty(&sema->waiters))
+  if(process != NULL)
   {
-    free(sema);
-  }
-  else
-  {
+    struct semaphore* sema = process->sema;
     sema_up(sema);
+    plist_remove_process(&process_list, cur->pid);
   }
-  plist_remove_process(&process_list, cur->pid);
-
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
