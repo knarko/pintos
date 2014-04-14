@@ -36,7 +36,7 @@ void plist_remove_process(struct map* m , key_t k)
 void plist_force_remove_process(struct map* m, key_t k)
 {
   plist_remove_process(m, k);
-  map_remove(m, k);
+  free(map_remove(m, k));
 }
 
 void plist_print_all(struct map* m)
@@ -72,6 +72,7 @@ bool flag_children(key_t k, struct process* p, key_t parent)
     }
     if(p->parent_dead && !p->is_alive)
     {
+      free(p->sema);
       free(p);
       return 1;
     }
