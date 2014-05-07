@@ -1,6 +1,7 @@
 #include "map.h"
 
 #include <stdlib.h>
+#include "threads/malloc.h"
 
 
 void map_init(struct map* m)

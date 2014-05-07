@@ -41,10 +41,11 @@ struct process
   struct semaphore* sema;
 };
 
+void plist_init (void);
+
 key_t plist_add_process(struct map*, int, char*, struct semaphore*);
 struct process* plist_find_process(struct map*, key_t);
-void plist_remove_process(struct map*, key_t);
-void plist_force_remove_process(struct map*, key_t);
+void plist_remove_process(struct map*, key_t, bool);
 
 void plist_for_each(struct map*, void(*exec)(key_t, struct process*, int), int);
 void plist_remove_if(struct map*, bool(*exec)(key_t, struct process*, int), int);

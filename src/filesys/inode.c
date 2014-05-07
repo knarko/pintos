@@ -130,6 +130,7 @@ inode_open (disk_sector_t sector)
       if (inode->sector == sector)
         {
           inode_reopen (inode);
+  lock_release(&inode_list_lock);
           return inode;
         }
     }
