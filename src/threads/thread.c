@@ -14,6 +14,7 @@
 #ifdef USERPROG
 #include "userprog/process.h"
 #include "userprog/map.h"
+#include "userprog/flist.h"
 #endif
 
 /* Random value for struct thread's `magic' member.

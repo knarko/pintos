@@ -63,7 +63,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
    * one address, and at that address (the first) char (of a possible
    * sequence) can be found. */
   char* cmd_line_on_stack;
-  char* ptr_save;
+  //char* ptr_save;
   //int i = 0;
 
   /* CALCULate the bytes needed to store the command_line */
@@ -77,7 +77,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
   }
   strlcpy(new_command_line, command_line, line_size);
   char* curr;
-  char** saveptr;
+  char* saveptr;
   argc = 0;
   line_size = 0;
   for(curr = strtok_r(new_command_line, " ", &saveptr); curr != NULL; )
@@ -113,7 +113,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
   esp->ret = NULL;
   esp->argc = argc;
   /* calculate where in the memory the argv array starts */
-  esp->argv = esp + 1;
+  esp->argv = (char**) (esp + 1);
 
   /* calculate where in the memory the words is stored */
   cmd_line_on_stack = stack_top - line_size;
@@ -143,6 +143,7 @@ void* setup_main_stack(const char* command_line, void* stack_top)
 void process_init(void)
 {
   map_init(&process_list);
+  plist_init();
 }
 
 /* This function is currently never called. As thread_exit does not
@@ -349,7 +350,7 @@ process_wait (int child_id)
     struct semaphore* sema = p->sema;
     sema_down(sema);
     status = p->exit_status;
-    plist_force_remove_process(&process_list, child_id);
+    plist_remove_process(&process_list, child_id, true);
   }
   debug("%s#%d: process_wait(%d) RETURNS %d\n",
       cur->name, cur->tid, child_id, status);
@@ -398,7 +399,7 @@ process_cleanup (void)
   {
     struct semaphore* sema = process->sema;
     sema_up(sema);
-    plist_remove_process(&process_list, cur->pid);
+    plist_remove_process(&process_list, cur->pid, false);
   }
 
   /* Destroy the current process's page directory and switch back

@@ -13,6 +13,8 @@
 #include "userprog/pagedir.h"
 #include "userprog/process.h"
 #include "devices/input.h"
+#include "flist.h"
+#include "devices/timer.h"
 
 #define DBG(format, ...) printf(format "\n", ##__VA_ARGS__)
 
@@ -157,7 +159,7 @@ syscall_handler (struct intr_frame *f)
       break;
 
     case SYS_OPEN:
-      f->eax = sys_open(esp[1]);
+      f->eax = sys_open((char*)esp[1]);
       break;
 
     case SYS_FILESIZE:
