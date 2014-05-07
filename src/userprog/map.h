@@ -9,15 +9,15 @@ typedef int key_t;
 
 struct association
 {
-	key_t key;
-	value_t value;
-	struct list_elem elem;
+  key_t key;
+  value_t value;
+  struct list_elem elem;
 };
 
 struct map
 {
-	struct list content;
-	int next_key;
+  struct list content;
+  int next_key;
 };
 
 void map_init(struct map*);

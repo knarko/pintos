@@ -350,7 +350,6 @@ process_wait (int child_id)
     struct semaphore* sema = p->sema;
     sema_down(sema);
     status = p->exit_status;
-    free(sema);
     plist_remove_process(&process_list, child_id, true);
   }
   debug("%s#%d: process_wait(%d) RETURNS %d\n",
@@ -420,6 +419,8 @@ process_cleanup (void)
   }
   debug("%s#%d: process_cleanup() DONE with status %d\n",
       cur->name, cur->tid, status);
+  if (cur->tid == 3)
+    process_print_list();
 }
 
 /* Sets up the CPU for running user code in the current

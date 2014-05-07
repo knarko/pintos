@@ -85,5 +85,7 @@ int main(int argc, char* argv[])
     while (ticks--)
       ;
   }
+  plist();
+
   return 0;
 }
