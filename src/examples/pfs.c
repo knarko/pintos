@@ -12,7 +12,6 @@
 
 int main(void)
 {
-  while(true){
   int i;
   int pid[5];
 
@@ -28,7 +27,6 @@ int main(void)
   for (i = 0; i < 5; i++)
   {
     wait(pid[i]);
-  }
   }
   exit(0);
 }
