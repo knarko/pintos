@@ -6,13 +6,13 @@
 #include "userprog/map.h"
 #include "threads/synch.h"
 
-struct lock flist_lock;
+
 
 void flist_init(struct map* m)
 {
  map_init(m);
  m->next_key = 2;
- lock_init(&flist_lock);
+
 }
 
 /*
@@ -22,9 +22,9 @@ void flist_init(struct map* m)
 */
 int32_t flist_add_file(struct file* file, struct thread* t)
 {
-  lock_acquire(&flist_lock);
+
   int32_t k = map_insert(&(t->open_files), file);
-  lock_release(&flist_lock);
+
   return k;
 }
 
@@ -36,9 +36,9 @@ int32_t flist_add_file(struct file* file, struct thread* t)
 */
 value_t flist_find_file(int fd, struct thread* t)
 {
-  lock_acquire(&flist_lock);
+
   value_t v = map_find(&(t->open_files), fd);
-  lock_release(&flist_lock);
+
   return v;
 }
 
@@ -50,9 +50,9 @@ value_t flist_find_file(int fd, struct thread* t)
 */
 value_t flist_remove_file(int fd, struct thread* t)
 {
-  lock_acquire(&flist_lock);
+
   value_t v = map_remove(&(t->open_files), fd);
-  lock_release(&flist_lock);
+
   return v;
 }
 
@@ -70,8 +70,8 @@ void flist_remove_process(struct thread* t)
 {
   if (t == NULL) return;
 
-  lock_acquire(&flist_lock);
+
   map_remove_if(&(t->open_files), always_true, 0);
-  lock_release(&flist_lock);
+
 }
 
