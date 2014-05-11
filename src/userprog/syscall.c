@@ -57,6 +57,12 @@ sys_open(char* fname)
   }
 }
 
+static bool
+sys_remove(char* filename)
+{
+ return filesys_remove(filename);
+}
+
   static int32_t
 sys_filesize(int32_t fd)
 {
@@ -81,6 +87,13 @@ sys_read(const int32_t fd, char* buf, const int32_t len)
     }
     return i;
   }
+  else
+  {
+    struct file *f = flist_find_file(fd, thread_current());
+    if (f != NULL) {
+     return file_read(f, buf, len);
+    }
+  }
   return -1;
 }
 
@@ -91,6 +104,13 @@ sys_write(const int32_t fd, char* buf, const int32_t len)
   {
     putbuf(buf, len);
     return len;
+  }
+  else
+  {
+    struct file *f = flist_find_file(fd, thread_current());
+    if (f != NULL) {
+     return file_write(f, buf, len);
+    }
   }
   return -1;
 }
@@ -115,7 +135,7 @@ sys_file_tell(int32_t fd)
 {
   struct file *f = flist_find_file(fd, thread_current());
   if (f != NULL)
-    file_tell(f);
+    return file_tell(f);
   return -1;
 }
 
@@ -156,6 +176,7 @@ syscall_handler (struct intr_frame *f)
       break;
 
     case SYS_REMOVE:
+      f->eax = sys_remove((char*)esp[1]);
       break;
 
     case SYS_OPEN:
