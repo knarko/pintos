@@ -143,6 +143,7 @@ inode_open (disk_sector_t sector)
   inode = malloc (sizeof *inode);
   if (inode == NULL)
   {
+      lock_release(&inode_list_lock);
     return NULL;
   }
 
