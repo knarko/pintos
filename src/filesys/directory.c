@@ -202,7 +202,9 @@ dir_remove (struct dir *dir, const char *name)
 
   ASSERT (dir != NULL);
   ASSERT (name != NULL);
-
+  
+  //TODO
+  lock_acquire(&dir_lock);
   /* Find directory entry. */
   if (!lookup (dir, name, &e, &ofs))
     goto done;
@@ -222,6 +224,7 @@ dir_remove (struct dir *dir, const char *name)
   success = true;
 
  done:
+  lock_release(&dir_lock);
   inode_close (inode);
   return success;
 }

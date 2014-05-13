@@ -39,6 +39,7 @@ struct inode
   bool removed;                       /* True if deleted, false otherwise. */
   struct inode_disk data;             /* Inode content. */
 
+  struct lock open_cnt_lock;
   struct semaphore access_sema;
   struct lock counter_lock;
   int readers;
@@ -143,7 +144,7 @@ inode_open (disk_sector_t sector)
   inode = malloc (sizeof *inode);
   if (inode == NULL)
   {
-      lock_release(&inode_list_lock);
+    lock_release(&inode_list_lock);
     return NULL;
   }
 
@@ -153,6 +154,7 @@ inode_open (disk_sector_t sector)
   inode->sector = sector;
   inode->open_cnt = 1;
   inode->removed = false;
+  lock_init(&inode->open_cnt_lock);
   sema_init(&inode->access_sema, 1);
   lock_init(&inode->counter_lock);
   inode->readers = 0;
@@ -170,7 +172,9 @@ inode_reopen (struct inode *inode)
 {
   if (inode != NULL)
   {
+    lock_acquire(&inode->open_cnt_lock);
     inode->open_cnt++;
+    lock_release(&inode->open_cnt_lock);
   }
   return inode;
 }
@@ -193,8 +197,11 @@ inode_close (struct inode *inode)
     return;
 
 
-  lock_acquire(&inode_list_lock);
+
   /* Release resources if this was the last opener. */
+  lock_acquire(&inode_list_lock);
+  lock_acquire(&inode->open_cnt_lock);
+  //lock_acquire(&inode->open_cnt_lock);
   if (--inode->open_cnt == 0)
   {
     /* Remove from inode list. */
@@ -210,8 +217,11 @@ inode_close (struct inode *inode)
     }
 
     free (inode);
-    //    return;
-  }
+    //lock_release(&inode_list_lock);
+    //return;
+  } else {
+    lock_release(&inode->open_cnt_lock);
+  } 
   lock_release(&inode_list_lock);
 }
 
@@ -347,7 +357,7 @@ inode_write_at (struct inode *inode, const void *buffer_, off_t size,
 
       /* If the sector contains data before or after the chunk
          we're writing, then we need to read in the sector
-         first.  Otherwise we start with a sector of all zeros. */
+         first. Otherwise we start with a sector of all zeros. */
       if (sector_ofs > 0 || chunk_size < sector_left)
         disk_read (filesys_disk, sector_idx, bounce);
       else
