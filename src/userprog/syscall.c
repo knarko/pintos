@@ -153,8 +153,10 @@ syscall_handler (struct intr_frame *f)
 {
   int32_t* esp = (int32_t*)f->esp;
 
-  if (!verify_fix_length(esp, sizeof(struct intr_frame))) {
-    thread_exit();
+  //TODO: What value are we supposed to check with here? I don't know.
+  if (!verify_fix_length(esp, sizeof(*esp))) {
+    process_exit(-1);
+    return;
   }
 
   switch ( esp[0] )
@@ -165,6 +167,7 @@ syscall_handler (struct intr_frame *f)
 
     case SYS_EXIT:
       //DBG("#Exit status: %i", esp[1]);
+
       process_exit(esp[1]);
       break;
 
@@ -227,7 +230,7 @@ syscall_handler (struct intr_frame *f)
         printf ("# Stack top + 0: %d\n", esp[0]);
         printf ("# Stack top + 1: %d\n", esp[1]);
 
-        thread_exit ();
+        process_exit(-1);
       }
   }
 }
