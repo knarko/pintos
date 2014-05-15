@@ -60,6 +60,7 @@ userprog_SRC += userprog/tss.c		# TSS management.
 userprog_SRC += userprog/flist.c	# Open file list.
 userprog_SRC += userprog/plist.c	# Process list.
 userprog_SRC += userprog/map.c	# Map implementation
+userprog_SRC += userprog/verify_adr.c	# Verifies adresses
 
 # No virtual memory code yet.
 #vm_SRC = vm/file.c			# Some file.

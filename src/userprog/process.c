@@ -419,8 +419,6 @@ process_cleanup (void)
   }
   debug("%s#%d: process_cleanup() DONE with status %d\n",
       cur->name, cur->tid, status);
-  if (cur->tid == 3)
-    process_print_list();
 }
 
 /* Sets up the CPU for running user code in the current

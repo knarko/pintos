@@ -1,11 +1,15 @@
 #include <stdlib.h>
 #include "pagedir.h"
+#include "threads/vaddr.h"
 
 
 /* Kontrollera alla adresser från och med start till och inte med
  * (start+length). */
 bool verify_fix_length(void* start, int length)
 {
+  if (start == NULL)
+    return false;
+
 	void* adr;
 	void* end = start+length;
 
@@ -14,7 +18,7 @@ bool verify_fix_length(void* start, int length)
 		if(pagedir_get_page(NULL, adr) == NULL)
 			return false;
 	}
-	return true;
+	return adr < PHYS_BASE;
 }
 
 /* Kontrollera alla adresser från och med start till och med den

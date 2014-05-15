@@ -15,6 +15,7 @@
 #include "devices/input.h"
 #include "flist.h"
 #include "devices/timer.h"
+#include "userprog/verify_adr.h"
 
 #define DBG(format, ...) printf(format "\n", ##__VA_ARGS__)
 
@@ -57,10 +58,10 @@ sys_open(char* fname)
   }
 }
 
-static bool
+  static bool
 sys_remove(char* filename)
 {
- return filesys_remove(filename);
+  return filesys_remove(filename);
 }
 
   static int32_t
@@ -91,7 +92,7 @@ sys_read(const int32_t fd, char* buf, const int32_t len)
   {
     struct file *f = flist_find_file(fd, thread_current());
     if (f != NULL) {
-     return file_read(f, buf, len);
+      return file_read(f, buf, len);
     }
   }
   return -1;
@@ -109,7 +110,7 @@ sys_write(const int32_t fd, char* buf, const int32_t len)
   {
     struct file *f = flist_find_file(fd, thread_current());
     if (f != NULL) {
-     return file_write(f, buf, len);
+      return file_write(f, buf, len);
     }
   }
   return -1;
@@ -151,6 +152,10 @@ sys_close(int32_t fd)
 syscall_handler (struct intr_frame *f)
 {
   int32_t* esp = (int32_t*)f->esp;
+
+  if (!verify_fix_length(esp, sizeof(struct intr_frame))) {
+    thread_exit();
+  }
 
   switch ( esp[0] )
   {
@@ -217,10 +222,10 @@ syscall_handler (struct intr_frame *f)
 
     default:
       {
-        printf ("Executed an unknown system call!\n");
+        printf ("# Executed an unknown system call!\n");
 
-        printf ("Stack top + 0: %d\n", esp[0]);
-        printf ("Stack top + 1: %d\n", esp[1]);
+        printf ("# Stack top + 0: %d\n", esp[0]);
+        printf ("# Stack top + 1: %d\n", esp[1]);
 
         thread_exit ();
       }
