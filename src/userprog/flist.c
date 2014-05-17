@@ -1,7 +1,6 @@
 #include <stddef.h>
 
 #include "userprog/flist.h"
-#include "threads/malloc.h"
 #include "threads/thread.h"
 #include "userprog/map.h"
 #include "threads/synch.h"

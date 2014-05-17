@@ -15,11 +15,13 @@ plist_init (void)
 }
 
 void plist_print_process(key_t, struct process*, int);
-bool flag_children(key_t, struct process*, int);
+bool flag_child(key_t, struct process*, int);
 
 key_t plist_add_process(struct map* m, int parent_id, char* name, struct semaphore* sema)
 {
   struct process* p = malloc(sizeof(struct process));
+  if(p == NULL)
+    return -1;
   strlcpy(p->name, name, 16);
   p->parent = parent_id;
   p->sema = sema;
@@ -49,7 +51,7 @@ void plist_remove_process(struct map* m , key_t k, bool force_remove)
   {
     p->is_alive = 0;
     p->parent_dead = force_remove;
-    map_remove_if(m, (void*) &flag_children, k);
+    map_remove_if(m, (void*) &flag_child, k);
   }
   lock_release(&plist_lock);
 }
@@ -80,7 +82,7 @@ void plist_print_process(key_t k, struct process* p, int aux)
   }
 }
 
-bool flag_children(key_t k, struct process* p, int parent)
+bool flag_child(key_t k, struct process* p, int parent)
 {
   if(p != NULL)
   {

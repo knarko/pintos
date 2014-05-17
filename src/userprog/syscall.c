@@ -224,6 +224,7 @@ syscall_handler (struct intr_frame *f)
       sys_verify_fix_length(&esp[1], sizeof(int32_t));
       sys_verify_variable_length((char*)esp[2]);
       sys_verify_fix_length(&esp[3], sizeof(int32_t));
+      sys_verify_fix_length(esp[2], esp[3]);
       f->eax = sys_write(esp[1], (char*)esp[2], esp[3]);
       break;
 

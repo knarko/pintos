@@ -203,6 +203,8 @@ process_execute (const char *command_line)
 
   /* COPY command line out of parent process memory */
   arguments.command_line = malloc(command_line_size);
+  if (arguments.command_line == NULL)
+    return process_id;
   strlcpy(arguments.command_line, command_line, command_line_size);
 
   strlcpy_first_word (debug_name, command_line, 64);
@@ -272,6 +274,8 @@ start_process (struct parameters_to_start_process* parameters)
   {
     sema_init(sema, 0);
     parameters->pid = plist_add_process(&process_list, parameters->pid, thread_current()->name, sema);
+    if (parameters->pid == -1)
+      parameters->success = false;
     thread_current()->pid = parameters->pid;
 
     // process_print_list();

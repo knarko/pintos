@@ -14,6 +14,8 @@ void map_init(struct map* m)
 key_t map_insert(struct map* m, value_t value)
 {
   struct association *my_ass = malloc(sizeof(struct association));
+  if (my_ass == NULL)
+    return -1;
   my_ass->value = value;
   my_ass->key = m->next_key++;
 
