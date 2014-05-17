@@ -6,18 +6,20 @@
 
 /* Kontrollera alla adresser från och med start till och inte med
  * (start+length). */
-bool verify_fix_length(void* start, int length)
+bool verify_fix_length(void* start, uint32_t length)
 {
   void* adr;
   void* end = start+length;
   uint32_t *pd = thread_current()->pagedir;
+  if(end >= PHYS_BASE)
+    return false;
 
   for (adr = pg_round_down(start); adr < end; adr += PGSIZE)
   {
     if(pagedir_get_page(pd, adr) == NULL)
       return false;
   }
-  return end < PHYS_BASE;
+  return true;
 }
 
 /* Kontrollera alla adresser från och med start till och med den
@@ -29,7 +31,7 @@ bool verify_variable_length(char* start)
   void* page_adr = pg_round_down(adr);
   uint32_t *pd = thread_current()->pagedir;
 
-  if (pagedir_get_page(pd, page_adr) == NULL)
+  if (adr >= PHYS_BASE || pagedir_get_page(pd, page_adr) == NULL)
     return false;
 
   if (*adr == '\0')
@@ -39,6 +41,8 @@ bool verify_variable_length(char* start)
 
   do {
     ++adr;
+    if (adr >= PHYS_BASE)
+      return false;
     if (adr == page_adr)
     {
       if (pagedir_get_page(pd, page_adr) == NULL)
@@ -49,5 +53,5 @@ bool verify_variable_length(char* start)
     }
   } while (*adr != '\0');
 
-  return adr < PHYS_BASE;
+  return true;
 }

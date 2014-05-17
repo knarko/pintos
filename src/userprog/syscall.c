@@ -146,6 +146,18 @@ sys_close(int32_t fd)
   filesys_close(flist_remove_file(fd, thread_current()));
 }
 
+  static void
+sys_verify_variable_length(char* ptr)
+{
+  if(!verify_variable_length(ptr))
+    process_exit(-1);
+}
+  static void
+sys_verify_fix_length(void* ptr, uint32_t length)
+{
+  if(!verify_fix_length(ptr, length))
+    process_exit(-1);
+}
 
 
   static void
@@ -154,10 +166,7 @@ syscall_handler (struct intr_frame *f)
   int32_t* esp = (int32_t*)f->esp;
 
   //TODO: What value are we supposed to check with here? I don't know.
-  if (!verify_fix_length(esp, sizeof(*esp))) {
-    process_exit(-1);
-    return;
-  }
+  sys_verify_fix_length(esp, sizeof(*esp));
 
   switch ( esp[0] )
   {
@@ -168,54 +177,74 @@ syscall_handler (struct intr_frame *f)
     case SYS_EXIT:
       //DBG("#Exit status: %i", esp[1]);
 
+      sys_verify_fix_length(&esp[1], sizeof(int32_t));
       process_exit(esp[1]);
       break;
 
     case SYS_EXEC:
+      sys_verify_variable_length((char*)esp[1]);
       f->eax = process_execute((char*)esp[1]);
       break;
 
     case SYS_WAIT:
-      process_wait(esp[1]);
+      sys_verify_fix_length(&esp[1], sizeof(int));
+      f->eax = process_wait(esp[1]);
       break;
 
     case SYS_CREATE:
+      sys_verify_variable_length((char*)esp[1]);
+      sys_verify_fix_length(&esp[2], sizeof(off_t));
       f->eax = filesys_create((const char*)esp[1], esp[2]);
       break;
 
     case SYS_REMOVE:
+      sys_verify_variable_length((char*)esp[1]);
       f->eax = sys_remove((char*)esp[1]);
       break;
 
     case SYS_OPEN:
+      sys_verify_variable_length((char*)esp[1]);
       f->eax = sys_open((char*)esp[1]);
       break;
 
     case SYS_FILESIZE:
+      sys_verify_fix_length(&esp[1], sizeof(int32_t));
       f->eax = sys_filesize(esp[1]);
       break;
 
     case SYS_READ:
+      sys_verify_fix_length(&esp[1], sizeof(int32_t));
+      sys_verify_variable_length((char*)esp[2]);
+      sys_verify_fix_length(&esp[3], sizeof(int32_t));
+      sys_verify_fix_length(esp[2], esp[3]);
       f->eax = sys_read(esp[1], (char*)esp[2], esp[3]);
       break;
 
     case SYS_WRITE:
+      sys_verify_fix_length(&esp[1], sizeof(int32_t));
+      sys_verify_variable_length((char*)esp[2]);
+      sys_verify_fix_length(&esp[3], sizeof(int32_t));
       f->eax = sys_write(esp[1], (char*)esp[2], esp[3]);
       break;
 
     case SYS_SEEK:
+      sys_verify_fix_length(&esp[1], sizeof(int32_t));
+      sys_verify_fix_length(&esp[2], sizeof(int32_t));
       sys_file_seek(esp[1], esp[2]);
       break;
 
     case SYS_TELL:
+      sys_verify_fix_length(&esp[1], sizeof(int32_t));
       f->eax = sys_file_tell(esp[1]);
       break;
 
     case SYS_CLOSE:
+      sys_verify_fix_length(&esp[1], sizeof(int32_t));
       sys_close(esp[1]);
       break;
 
     case SYS_SLEEP:
+      sys_verify_fix_length(&esp[1], sizeof(int32_t));
       timer_msleep(esp[1]);
       break;
 
