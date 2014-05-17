@@ -11,7 +11,7 @@ bool verify_fix_length(void* start, uint32_t length)
   void* adr;
   void* end = start+length;
   uint32_t *pd = thread_current()->pagedir;
-  if(end >= PHYS_BASE)
+  if(start == NULL || end >= PHYS_BASE)
     return false;
 
   for (adr = pg_round_down(start); adr < end; adr += PGSIZE)
@@ -27,6 +27,8 @@ bool verify_fix_length(void* start, uint32_t length)
  * lagras på detta sätt.) */
 bool verify_variable_length(char* start)
 {
+  if(start == NULL)
+    return false;
   char* adr = start;
   void* page_adr = pg_round_down(adr);
   uint32_t *pd = thread_current()->pagedir;
