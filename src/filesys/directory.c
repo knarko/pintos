@@ -78,11 +78,13 @@ dir_reopen (struct dir *dir)
 void
 dir_close (struct dir *dir)
 {
+  lock_acquire(&dir_lock);
   if (dir != NULL)
     {
       inode_close (dir->inode);
       free (dir);
     }
+  lock_release(&dir_lock);
 }
 
 /* Returns the inode encapsulated by DIR. */
@@ -204,7 +206,6 @@ dir_remove (struct dir *dir, const char *name)
   ASSERT (dir != NULL);
   ASSERT (name != NULL);
 
-  //TODO
   lock_acquire(&dir_lock);
   /* Find directory entry. */
   if (!lookup (dir, name, &e, &ofs))
