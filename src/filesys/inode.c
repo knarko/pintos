@@ -160,11 +160,10 @@ inode_open (disk_sector_t sector)
   inode->readers = 0;
   lock_init(&inode->waiting_lock);
 
-  lock_release(&inode_list_lock);
-
+  
   disk_read (filesys_disk, inode->sector, &inode->data);
 
-  //  lock_release(&inode_list_lock);
+  lock_release(&inode_list_lock);
   return inode;
 }
 
