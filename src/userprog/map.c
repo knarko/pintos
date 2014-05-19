@@ -47,7 +47,7 @@ value_t map_remove(struct map* m, key_t key)
     struct association *f = list_entry(e, struct association, elem);
     if (f->key == key)
     {
-      list_remove(e);
+      e = list_remove(e);
       value_t ret = f->value;
       free(f);
       return ret;

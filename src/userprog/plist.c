@@ -58,7 +58,7 @@ void plist_remove_process(struct map* m , key_t k, bool force_remove)
 
 void plist_print_all(struct map* m)
 {
-  printf("%-3s %-16s %-11s %-6s %-6s %-13s\n", "PID", "NAME", "EXIT_STATUS", "ALIVE?", "PARENT", "PARENT_ALIVE?");
+  printf("# %-3s %-16s %-11s %-6s %-6s %-13s\n", "PID", "NAME", "EXIT_STATUS", "ALIVE?", "PARENT", "PARENT_ALIVE?");
   lock_acquire(&plist_lock);
   map_for_each(m, (void*) &plist_print_process, 0);
   lock_release(&plist_lock);
@@ -76,7 +76,7 @@ void plist_print_process(key_t k, struct process* p, int aux)
 {
   if(p != NULL)
   {
-    printf("%-3i %-16s %-11i %-6s %-6i %-13s\n",
+    printf("# %-3i %-16s %-11i %-6s %-6i %-13s\n",
         k, p->name, p->exit_status, p->is_alive ? "true":"false", p->parent,
         p->parent_dead ? "false":"true");
   }
@@ -92,8 +92,8 @@ bool flag_child(key_t k, struct process* p, int parent)
     }
     if(p->parent_dead && !p->is_alive)
     {
-      //free(p->sema);
-      //free(p);
+      free(p->sema);
+      free(p);
       return 1;
     }
   }
