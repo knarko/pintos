@@ -92,8 +92,8 @@ bool flag_child(key_t k, struct process* p, int parent)
     }
     if(p->parent_dead && !p->is_alive)
     {
-      free(p->sema);
-      free(p);
+      //free(p->sema);
+      //free(p);
       return 1;
     }
   }
